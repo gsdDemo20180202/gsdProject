@@ -1,0 +1,100 @@
+<aura:component implements="force:appHostable" controller="CreateAppointmentController" >
+    <!--TO DO - cleanup + last misisng piece  wiring fields on modal to event and lead field, 
+				allowing user changing time etc, change picklist to salesforce modal ? 
+				Handling Errors  -->
+    <!-- Required scripts -->
+    <ltng:require styles="{!$Resource.FullCalendar     + '/fullcalendar-3.8.2/fullcalendar.css'}"
+                  scripts="{!join(',',
+                           $Resource.FullCalendar  + '/fullcalendar-3.8.2/lib/jquery.min.js',
+                           $Resource.FullCalendar  + '/fullcalendar-3.8.2/lib/moment.min.js',
+                           $Resource.FullCalendar  + '/fullcalendar-3.8.2/fullcalendar.js'
+                           )}"
+                  afterScriptsLoaded="{!c.doInit}" />
+    <ltng:require styles="/resource/FullCalendar/fullcalendar-3.8.2/fullcalendar.css"/>
+    
+    <!-- Attributes -->
+    <aura:attribute name="calEvents" type="Object[]" access="public" />
+    <aura:attribute name="events" type="Object[]" access="public" />
+    <aura:attribute name="today" type="String"  access="private"/>
+    <aura:attribute name="newEvent" type="Event" default="{sobjectType: 'Event'}"/>
+    <aura:attribute name="showModal" type="Boolean" default="false"/>
+    <aura:attribute name="leadRecord" 	type="Lead" default="{sobjectType: 'Lead'}" access="public" />
+    <aura:attribute name="userRecord" 	type="User" default="{sobjectType: 'User'}" access="public" />
+    
+    <!-- Events -->
+    <aura:method name="init" action="{!c.doInit}"/>
+    <aura:handler name="loadData" value="{!v.events}" action="{!c.loadEvents}"/>
+    
+    <!-- Calendar -->
+    <div class="slds slds-box slds-m-around_large">
+        <div aura:id="calendar">
+        </div>
+    </div>
+    <!-- Modal -->
+    <aura:if isTrue="{!v.showModal}">
+        <div aura:id="modal" class="slds-modal slds-fade-in-open" tabindex="-1" role="dialog" aria-modal="true" aria-describedby="modal-content"  aria-labelledby="modal-heading" style="height: 640px;" >
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 id="modal-heading" class="slds-text-heading_medium slds-hyphenate">Appointment Details</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content">
+                    <div class="slds-form-element">
+                        <div class="slds-grid  slds-wrap">
+                            <div class="slds-col slds-size_1-of-1">
+                                <label class="slds-form-element__label" for="combobox-unique-id-2">Assigned To:</label>
+                                <span class="slds-text-heading_small">{!v.userRecord.Name}</span>    
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <label class="slds-form-element__label" for="combobox-unique-id-2">Initial Appointment Date:</label>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <span class="slds-text-heading_small">{!v.newEvent.StartDateTime}</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <label class="slds-form-element__label" for="combobox-unique-id-2">Initial Appointment Time:</label>
+                                <span class="slds-text-heading_small">{!v.newEvent.DurationInMinutes}</span>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <label class="slds-form-element__label" for="input-unique-id">
+                                    <abbr class="slds-required" title="required">*</abbr>Email:</label>
+                                <input id="input-unique-id" required="" class="slds-input" placeholder="Placeholder Text" type="text" value="{!v.leadRecord.Email}" disabled="true" />
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <label class="slds-form-element__label" for="input-unique-id">
+                                    <abbr class="slds-required" title="required">*</abbr>Phone:</label>
+                                <input id="input-unique-id" required="" class="slds-input" placeholder="Placeholder Text" type="text" value="{!v.leadRecord.Phone}" disabled="true" />
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <!-- <label class="slds-form-element__label" for="input-unique-id">
+                                <abbr class="slds-required" title="required">*</abbr>Subject:</label>-->
+                                <!--  <div class="slds-form-element__control">-->
+                                <!--//{!newEvent.Subject}-->
+                                <ui:inputSelect class="dynamic" aura:id="InputSubjectDynamic" label="Subject:" value="{!v.newEvent.Subject}">
+                                	<ui:inputSelectOption text="Busy" value="true" label="Busy" />
+                                    <ui:inputSelectOption text="Out of Office" label="Out of Office" />
+                                    <ui:inputSelectOption text="Free" label="Free" />
+                                </ui:inputSelect>
+                                <!--  </div>-->
+                            </div>
+                            <div class="slds-col slds-size_1-of-1">
+                                <!-- <label class="slds-form-element__label" for="combobox-unique-id-2">ShowTime As:</label>-->
+                                <!--//{!newEvent.ShowAs}-->
+                                <ui:inputSelect class="single" aura:id="InputShowTimeDynamic" label="ShowTime As:"  value="{!v.newEvent.ShowAs}">
+                                    <ui:inputSelectOption text="Appointment" value="true" label="Appointment" />
+                                    <ui:inputSelectOption text="Call" label="Call" />
+                                    <ui:inputSelectOption text="Email" label="Email" />
+                                    <ui:inputSelectOption text="Meeting" label="Meeting" />
+                                </ui:inputSelect>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning:button label="Save" onclick="{!c.saveEvent}"/>
+                    <lightning:button label="Cancel" onclick="{!c.cancel}"/>
+                </footer>
+            </div>
+        </div>
+        <div aura:id="backdrop"  class="slds-backdrop "></div>
+    </aura:if>
+</aura:component>

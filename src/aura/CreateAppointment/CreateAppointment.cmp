@@ -1,0 +1,55 @@
+<aura:component access="GLOBAL" controller="CreateAppointmentController" implements="force:lightningQuickActionWithoutHeader,force:hasRecordId,flexipage:availableForAllPageTypes">
+    <!-- Attributes -->
+    <aura:attribute name="aLead" 		type="Lead"/>
+    <aura:attribute name="aUser" 		type="User"/>
+    <aura:attribute name="leadRecord" 	type="Lead"/>
+    <aura:attribute name="userRecord" 	type="User"/>
+    <aura:attribute name="recordError" 	type="String"/>
+    <aura:attribute name="events" 		type="Object[]"/>
+    <aura:attribute name="event" 		type="Object"/>
+    
+    <!-- Data Service -->
+    <force:recordData aura:id="LeadrecordLoader"
+                      recordId="{!v.recordId}"
+                      layoutType="FULL"
+                      targetRecord="{!v.aLead}"
+                      targetFields="{!v.leadRecord}"
+                      targetError="{!v.recordError}"
+                      recordUpdated="{!c.handleRecordUpdated}"
+                      />
+    
+    <!-- Lightning Data Service errors, if any -->
+    <aura:if isTrue="{!not(empty(v.recordError))}">
+        <div class="recordError">
+            <ui:message title="Error" severity="error" closable="true">
+                {!v.recordError}
+            </ui:message>
+        </div>
+    </aura:if>
+    <!-- Init Load event 
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>-->
+    
+    <!-- Header -->
+    <div class="slds-page-header" role="banner">
+        <h1 class="slds-page-header__title slds-m-right--small
+                   slds-truncate slds-align-left">{!$Label.c.CreateAppointmentTitle}</h1>
+    </div>
+    
+    <!-- Details about the lead -->
+    <div class="slds-box slds-m-around_x-small">
+        <p class="slds-text-heading_label">{!$ObjectType.Lead.Name.Label}</p>
+        <p class="slds-text-heading_label">{!v.leadRecord.Name}</p>
+        <h1 class="">{!v.leadRecord.Street}, {!v.leadRecord.City}, {!v.leadRecord.State}</h1>
+        <h1 class="">{!v.leadRecord.PostalCode}, {!v.leadRecord.Country}</h1>
+    </div>
+    
+    <!-- Details about the Owner -->
+    <div class="slds-box slds-m-around_x-small">       
+        <p class="slds-text-heading_label">{!$ObjectType.Lead.Owner.Label}</p>
+        <force:recordView aura:id="UserRecordViewer" record="{!v.userRecord}" recordId="{!v.leadRecord.OwnerId}" type="MINI"/>
+    </div>
+    <!-- Calendar component -->
+    <div class="">
+        <c:FullCalendar aura:id="fullCalendar" events="{!v.events}" leadRecord="{!v.leadRecord}" userRecord="{!v.userRecord}"/>
+    </div>
+</aura:component>
